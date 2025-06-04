@@ -127,6 +127,8 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  p->kama_system_trace = 0;
+
   return p;
 }
 
@@ -292,6 +294,8 @@ fork(void)
   safestrcpy(np->name, p->name, sizeof(p->name));
 
   pid = np->pid;
+
+  np->kama_system_trace = p->kama_system_trace;
 
   np->state = RUNNABLE;
 
@@ -691,5 +695,31 @@ procdump(void)
       state = "???";
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
+  }
+}
+
+//设置需要跟踪的系统调用掩码
+uint64
+sys_trace(void)
+{
+  int mask;
+
+  if(argint(0,&mask)<0)
+    return -1;
+
+  myproc()->kama_system_trace = mask;
+  return 0;
+}
+
+void
+procnum(uint64 *num)
+{
+  struct proc *p;
+  *num = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++) {
+    if(p->state != UNUSED) {
+      (*num)++;
+    } 
   }
 }
